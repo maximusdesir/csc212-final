@@ -1,57 +1,52 @@
-# Finite-State Dialogue Manager for an LLM Ordering Chatbot
+# Letting a DFA Run the Routine Turns
 
-CSC 212 Theory of Computing, Fall 2026, The Catholic University of America
-Maximus Desir and Roman Colaberdino
+Finite-state dialogue manager for an LLM ordering chatbot.
+CSC 212 Theory of Computing, Fall 2026, Catholic University of America. Maximus Desir and Roman Colaberdino.
 
-## Question
+**Question:** Can a DFA over user intents handle the routine turns of an ordering chatbot without calling the
+LLM, and what fraction of LLM calls does it remove?
 
-Can a DFA over user intents handle the routine steps of an ordering chatbot (greet, add item, remove item, confirm, cancel) without calling the LLM, and what fraction of LLM calls does it remove across 50 scripted ordering dialogues?
+## Model
 
-## The model
+Accepts exactly the intent sequences that reach their first ending event: `confirm` with 1 to 3 items,
+`cancel`, or `request_help`. Anything after the ending is rejected.
 
-A complete 6-state DFA with the cart capped at 3 items.
+- Σ = {greet, add_item, remove_item, confirm, cancel, ask_question, request_help, unknown} (JFLAP: g a r c x q h u)
+- Q = {C0, C1, C2, C3, Done, Dead}, start C0, F = {Done}. Ck = k items in cart.
+- `add_item`: Ck → Ck+1 (C3 stays). `remove_item`: Ck → Ck−1 (C0 stays).
+- `confirm`: Ck → Done for k ≥ 1, C0 stays. `cancel`, `request_help`: → Done.
+- `greet`, `ask_question`, `unknown`: self-loops. The last two are the turns sent to the LLM.
+- Done and Dead go to Dead on every symbol.
 
-- States: `C0`-`C3` (items in the cart), `Done` (accepting), `Dead` (trap)
-- Start state: `C0`
-- Alphabet: 8 intent events, written as single letters in JFLAP
+The cap at 3 is what keeps memory bounded; an uncapped cart is not regular.
 
-| Symbol | Event | Symbol | Event |
-|---|---|---|---|
-| `g` | greet | `x` | cancel |
-| `a` | add_item | `q` | ask_question |
-| `r` | remove_item | `h` | request_help |
-| `c` | confirm | `u` | unknown |
+## Files
 
-The DFA accepts exactly the sequences that reach a first ending: confirm with 1 to 3 items, cancel, or request_help. Anything after the ending goes to `Dead`. Turns where the DFA reads `q` or `u` are the ones sent to the LLM.
+- `dfa.py`: the DFA, a turn-by-turn runner that counts LLM calls, and the evaluation
+- `test_dfa.py`: 24 accept/reject cases, completeness, 9 → 6 state minimization, LLM routing
+- `dialogues.jsonl`: scripted dialogues, one per line (5 so far, target 50)
 
-Without the cap, the language is not regular (Myhill-Nerode argument in the report).
-
-## Repository layout
-
-```
-chatbot_dfa.jff      JFLAP 7 file for the DFA
-docs/                outline, model checklist, report
-src/                 Python DFA and wrapper (automata-lib)
-tests/               pytest suite (24+ cases)
-data/                50 scripted dialogues with intent labels
-figures/             Graphviz diagrams
-```
-
-## Running it
+## Run
 
 ```bash
-pip install automata-lib pytest
-pytest tests/
-python src/run_dialogues.py data/dialogues.json
+pip install -r requirements.txt
+pytest -q
+python dfa.py dialogues.jsonl
 ```
 
-The last command prints accept/reject per dialogue and the LLM-call reduction, 1 - (q and u turns / total turns), by dialogue type.
+**Metric:** LLM-call reduction = 1 − (LLM turns ÷ total turns) per dialogue type, against a baseline that
+sends every turn to the LLM. Turns after the ending are never sent to the LLM.
 
-To open the model, load `chatbot_dfa.jff` in JFLAP 7 and use Input > Multiple Run with strings such as `gac` (accept) and `gc` (reject).
+**Dialogue format:**
+`{"id": "R01", "type": "routine", "intents": ["greet", "add_item", "confirm"], "expected_accept": true}`
 
-## Status
+## TODO
 
-- [x] Topic proposal (M1)
-- [x] Outline and model checklist (M2, 11/12)
-- [ ] Literature review, formal model, implementation and tests
-- [ ] Final report and repository (12/08)
+- [ ] Add `dialogue_dfa.jff`
+- [ ] Write the remaining 45 dialogues (30 routine, 10 question, 5 cancel, 5 help total)
+- [ ] Myhill–Nerode and non-regularity proofs in the report
+
+## Limitations
+
+Intents outside Σ ("make that a large") map to `unknown` and go to the LLM. The DFA tracks how many items
+are in the cart, not which ones. Results assume correct intent labels.
