@@ -1,7 +1,10 @@
 # Letting a DFA Run the Routine Turns
-
 Finite-state dialogue manager for an LLM ordering chatbot.
-CSC 212 Theory of Computing, Fall 2026, Catholic University of America. Maximus Desir and Roman Colaberdino.
+
+CSC 212 Theory of Computing
+Fall 2026\
+Catholic University of America. 
+Maximus Desir and Roman Colaberdino.
 
 **Question:** Can a DFA over user intents handle the routine turns of an ordering chatbot without calling the
 LLM, and what fraction of LLM calls does it remove?
@@ -42,7 +45,6 @@ sends every turn to the LLM. Turns after the ending are never sent to the LLM.
 
 ## TODO
 
-- [ ] Add `dialogue_dfa.jff`
 - [ ] Write the remaining 45 dialogues (30 routine, 10 question, 5 cancel, 5 help total)
 - [ ] Myhill–Nerode and non-regularity proofs in the report
 
