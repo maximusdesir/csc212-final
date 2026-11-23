@@ -2,7 +2,7 @@
 Finite-state dialogue manager for an LLM ordering chatbot.
 
 CSC 212 Theory of Computing
-Fall 2026\
+Fall 2026
 Catholic University of America. 
 Maximus Desir and Roman Colaberdino.
 
