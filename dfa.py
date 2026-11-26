@@ -45,19 +45,41 @@ def run_dialogue(intents, llm=lambda turn: "[LLM reply]"):
 
 
 def evaluate(path):
-    by_type = defaultdict(lambda: {"n": 0, "turns": 0, "llm": 0, "agree": 0})
+    """Returns {type: {n, turns, llm, agree, reduction}} plus an 'overall' row, and the disagreeing ids."""
+    rows = defaultdict(lambda: {"n": 0, "turns": 0, "llm": 0, "agree": 0})
+    disagree = []
     for line in open(path):
         d = json.loads(line)
         accepted, calls = run_dialogue(d["intents"])
-        t = by_type[d["type"]]
-        t["n"] += 1
-        t["turns"] += len(d["intents"])
-        t["llm"] += calls
-        t["agree"] += accepted == d["expected_accept"]
-    for name, t in sorted(by_type.items()):
-        print(f"{name:10} n={t['n']:3} reduction={1 - t['llm'] / t['turns']:.1%} "
-              f"label_agreement={t['agree']}/{t['n']}")
+        for key in (d["type"], "overall"):
+            r = rows[key]
+            r["n"] += 1
+            r["turns"] += len(d["intents"])
+            r["llm"] += calls
+            r["agree"] += accepted == d["expected_accept"]
+        if accepted != d["expected_accept"]:
+            disagree.append(d["id"])
+    for r in rows.values():
+        r["reduction"] = 1 - r["llm"] / r["turns"]
+    return dict(rows), disagree
+
+
+def to_markdown(rows, disagree):
+    order = [k for k in ("routine", "question", "cancel", "help") if k in rows] + ["overall"]
+    lines = ["| Type | Dialogues | Turns | LLM turns | LLM-call reduction | Label agreement |",
+             "|---|---|---|---|---|---|"]
+    for k in order:
+        r = rows[k]
+        lines.append(f"| {k} | {r['n']} | {r['turns']} | {r['llm']} | {r['reduction']:.1%} | {r['agree']}/{r['n']} |")
+    lines.append("")
+    lines.append("Baseline sends every turn to the LLM (0% reduction). "
+                 f"Disagreements: {', '.join(disagree) or 'none'}.")
+    return "\n".join(lines) + "\n"
 
 
 if __name__ == "__main__":
-    evaluate(sys.argv[1] if len(sys.argv) > 1 else "dialogues.jsonl")
+    path = sys.argv[1] if len(sys.argv) > 1 else "dialogues.jsonl"
+    table = to_markdown(*evaluate(path))
+    print(table)
+    with open("results.md", "w") as f:
+        f.write("# Results\n\n" + table)
