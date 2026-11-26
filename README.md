@@ -27,6 +27,8 @@ The cap at 3 is what keeps memory bounded; an uncapped cart is not regular.
 
 - `dfa.py`: the DFA, a turn-by-turn runner that counts LLM calls, and the evaluation
 - `test_dfa.py`: 24 accept/reject cases, completeness, 9 → 6 state minimization, LLM routing
+- `test_dialogues.py`: dataset checks (type counts, 6 to 10 turns, no turns after the ending)
+- `results.md`: generated results table for the report
 - `dialogues.jsonl`: 50 scripted dialogues, one per line (30 routine, 10 question, 5 cancel, 5 help)
 
 ## Run
@@ -34,7 +36,7 @@ The cap at 3 is what keeps memory bounded; an uncapped cart is not regular.
 ```bash
 pip install -r requirements.txt
 pytest -q
-python dfa.py dialogues.jsonl
+python dfa.py dialogues.jsonl   # prints the table and writes results.md
 ```
 
 **Metric:** LLM-call reduction = 1 − (LLM turns ÷ total turns) per dialogue type, against a baseline that
