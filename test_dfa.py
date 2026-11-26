@@ -44,6 +44,18 @@ def test_minimization_9_to_6():
     assert draft == M
 
 
+def test_jflap_matches_code():
+    # JFLAP reads each label as a literal string, so every transition must be one letter.
+    import xml.etree.ElementTree as ET
+    auto = ET.parse("chatbot_dfa.jff").getroot().find("automaton")
+    names = {s.get("id"): s.get("name") for s in auto.iter("state")}
+    edges = [(names[t.findtext("from")], t.findtext("read"), names[t.findtext("to")])
+             for t in auto.iter("transition")]
+    assert all(r in L for _, r, _ in edges)
+    assert sorted((q, L[r], d) for q, r, d in edges) == sorted(
+        (q, s, d) for q, row in DELTA.items() for s, d in row.items())
+
+
 def test_llm_routing():
     assert run_dialogue(["greet", "add_item", "confirm"]) == (True, 0)
     assert run_dialogue(["greet", "ask_question", "add_item", "unknown", "confirm"]) == (True, 2)
