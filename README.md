@@ -27,7 +27,7 @@ The cap at 3 is what keeps memory bounded; an uncapped cart is not regular.
 
 - `dfa.py`: the DFA, a turn-by-turn runner that counts LLM calls, and the evaluation
 - `test_dfa.py`: 24 accept/reject cases, completeness, 9 → 6 state minimization, LLM routing
-- `dialogues.jsonl`: scripted dialogues, one per line (5 so far, target 50)
+- `dialogues.jsonl`: 50 scripted dialogues, one per line (30 routine, 10 question, 5 cancel, 5 help)
 
 ## Run
 
@@ -40,12 +40,18 @@ python dfa.py dialogues.jsonl
 **Metric:** LLM-call reduction = 1 − (LLM turns ÷ total turns) per dialogue type, against a baseline that
 sends every turn to the LLM. Turns after the ending are never sent to the LLM.
 
+**Dialogues:** written by Maximus Desir, Roman Colaberdino, and Claude (Anthropic), with each intent label
+checked by hand. All orders use one fixed menu: cheeseburger, chicken sandwich, veggie wrap, fries, onion rings,
+side salad, coke, lemonade, milkshake. Requests outside the 8 intents ("make that a large", "no pickles") are
+labeled `unknown`. Q07 and Q09 are abandoned orders that never reach an ending, so they are labeled reject.
+These are realistic but scripted, not real user data.
+
 **Dialogue format:**
 `{"id": "R01", "type": "routine", "intents": ["greet", "add_item", "confirm"], "expected_accept": true}`
 
 ## TODO
 
-- [ ] Write the remaining 45 dialogues (30 routine, 10 question, 5 cancel, 5 help total)
+- [x] Write all 50 dialogues
 - [ ] Myhill–Nerode and non-regularity proofs in the report
 
 ## Limitations
