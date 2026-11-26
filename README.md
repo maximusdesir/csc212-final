@@ -28,6 +28,7 @@ The cap at 3 is what keeps memory bounded; an uncapped cart is not regular.
 - `dfa.py`: the DFA, a turn-by-turn runner that counts LLM calls, and the evaluation
 - `test_dfa.py`: 24 accept/reject cases, completeness, 9 → 6 state minimization, LLM routing
 - `test_dialogues.py`: dataset checks (type counts, 6 to 10 turns, no turns after the ending)
+- `THEORY.md`: minimization (9 → 6), Myhill–Nerode proof of minimality, uncapped cart is not regular
 - `results.md`: generated results table for the report
 - `dialogues.jsonl`: 50 scripted dialogues, one per line (30 routine, 10 question, 5 cancel, 5 help)
 
@@ -54,9 +55,17 @@ These are realistic but scripted, not real user data.
 ## TODO
 
 - [x] Write all 50 dialogues
-- [ ] Myhill–Nerode and non-regularity proofs in the report
+- [x] Myhill–Nerode and non-regularity proofs (`THEORY.md`, checked by tests)
+- [ ] Ask Prof. Bui whether to measure intent-classifier errors or assume labels are correct
+- [ ] Report draft (12/04)
 
 ## Limitations
 
 Intents outside Σ ("make that a large") map to `unknown` and go to the LLM. The DFA tracks how many items
 are in the cart, not which ones. Results assume correct intent labels.
+
+## AI use
+
+Claude (Anthropic) helped write the starter code, tests, and README, co-wrote the scripted dialogues with the
+authors, and drafted `THEORY.md`. The authors reviewed all of it; every proof step in `THEORY.md` is also
+checked by a test in `test_dfa.py`.
